@@ -389,9 +389,10 @@ module Geokit
       private 
       
       # Template method which does the reverse-geocode lookup.
-      def self.do_reverse_geocode(latlng) 
+      def self.do_reverse_geocode(latlng, options={}) 
+        locale_str = options[:locale] || 'us'
         latlng=LatLng.normalize(latlng)
-        res = self.call_geocoder_service("http://maps.google.com/maps/geo?ll=#{Geokit::Inflector::url_escape(latlng.ll)}&output=xml&key=#{Geokit::Geocoders::google}&oe=utf-8")
+        res = self.call_geocoder_service("http://maps.google.com/maps/geo?ll=#{Geokit::Inflector::url_escape(latlng.ll)}&output=xml&key=#{Geokit::Geocoders::google}&oe=utf-8&hl=#{locale_str}")
         #        res = Net::HTTP.get_response(URI.parse("http://maps.google.com/maps/geo?ll=#{Geokit::Inflector::url_escape(address_str)}&output=xml&key=#{Geokit::Geocoders::google}&oe=utf-8"))
         return GeoLoc.new unless (res.is_a?(Net::HTTPSuccess) || res.is_a?(Net::HTTPOK))
         xml = res.body
@@ -426,8 +427,9 @@ module Geokit
       # Geokit::Geocoders::GoogleGeocoder.geocode('Winnetka', :bias => bounds).state # => 'CA'
       def self.do_geocode(address, options = {})
         bias_str = options[:bias] ? construct_bias_string_from_options(options[:bias]) : ''
+        locale_str = options[:locale] || 'us'
         address_str = address.is_a?(GeoLoc) ? address.to_geocodeable_s : address
-        res = self.call_geocoder_service("http://maps.google.com/maps/geo?q=#{Geokit::Inflector::url_escape(address_str)}&output=xml#{bias_str}&key=#{Geokit::Geocoders::google}&oe=utf-8")
+        res = self.call_geocoder_service("http://maps.google.com/maps/geo?q=#{Geokit::Inflector::url_escape(address_str)}&output=xml#{bias_str}&key=#{Geokit::Geocoders::google}&oe=utf-8&hl=#{locale_str}")
         return GeoLoc.new if !res.is_a?(Net::HTTPSuccess)
         xml = res.body
         logger.debug "Google geocoding. Address: #{address}. Result: #{xml}"
